@@ -10,7 +10,7 @@ export default function Challenge({ params }: { params: { slug: string } }) {
   const challenge = challenges.find((item) => item.slug === params.slug) ?? challenges[0];
 
   return (
-    <div className="page">
+    <div className="page page-wide">
       <Link href="/machine-coding" className="subtle link-subtle">
         ← All challenges
       </Link>
@@ -26,15 +26,17 @@ export default function Challenge({ params }: { params: { slug: string } }) {
       <div className="callout">
         <div className="callout-label">Prompt</div>
         <div className="callout-body">
-          Build a focused, production-minded version. Talk through assumptions, keep the
-          first pass small, and leave a clear acceptance checklist for the final five minutes.
+          Build a focused, production-minded version. Talk through assumptions, keep the first pass
+          small, and leave a clear acceptance checklist for the final five minutes.
         </div>
       </div>
       <div className="section-head">
         <h2 className="h2">Workspace</h2>
         <span className="subtle">Drafts save in this browser</span>
       </div>
-      <Editor id={challenge.slug} />
+      <div className="workspace-shell">
+        <Editor id={challenge.slug} />
+      </div>
     </div>
   );
 }

@@ -25,11 +25,7 @@ export function LessonActions({ id }: { id: string }) {
 
   return (
     <div className="hero-actions">
-      <button
-        className={`btn ${done ? 'primary' : ''}`}
-        onClick={markComplete}
-        disabled={done}
-      >
+      <button className={`btn ${done ? 'primary' : ''}`} onClick={markComplete} disabled={done}>
         {done ? 'Completed' : 'Mark complete'}
       </button>
       <button className="btn" onClick={toggleBookmark}>

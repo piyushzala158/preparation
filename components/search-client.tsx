@@ -78,9 +78,7 @@ export function SearchClient({ initialQuery = '' }: { initialQuery?: string }) {
         ))}
       </div>
       {!results.length && (
-        <div className="empty">
-          No matches yet. Try “rendering”, “React”, or “performance”.
-        </div>
+        <div className="empty">No matches yet. Try “rendering”, “React”, or “performance”.</div>
       )}
     </>
   );

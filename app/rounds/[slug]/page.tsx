@@ -20,8 +20,8 @@ export default function Round({ params }: { params: { slug: string } }) {
         <div className="callout">
           <div className="callout-label">What good looks like</div>
           <div className="callout-body">
-            Be structured, specific, and curious. State your assumptions, show your
-            reasoning, and make the tradeoffs visible before you land on an answer.
+            Be structured, specific, and curious. State your assumptions, show your reasoning, and
+            make the tradeoffs visible before you land on an answer.
           </div>
         </div>
         <h2 className="h2" style={{ marginTop: 38 }}>

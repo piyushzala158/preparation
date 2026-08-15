@@ -7,8 +7,8 @@ export default function Rounds() {
       <div className="eyebrow">Interview mode</div>
       <h1 className="h1">Interview rounds</h1>
       <p className="subtle" style={{ maxWidth: 620 }}>
-        Every round rewards a different kind of clarity. Use these playbooks to practice
-        the shape of the answer—not just the facts inside it.
+        Every round rewards a different kind of clarity. Use these playbooks to practice the shape
+        of the answer—not just the facts inside it.
       </p>
       <div className="section-head">
         <h2 className="h2">Round playbooks</h2>
@@ -16,7 +16,11 @@ export default function Rounds() {
       </div>
       <div className="round-grid">
         {rounds.map((round) => (
-          <Link href={`/rounds/${round.slug}`} key={round.slug} className="card round-card">
+          <Link
+            href={`/rounds/${round.slug}`}
+            key={round.slug}
+            className="card round-card interactive-card"
+          >
             <div className="round-number">Round {round.number}</div>
             <div className="round-title">{round.title}</div>
             <p className="subtle">{round.desc}</p>

@@ -3,11 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { ReactNode } from 'react';
-import {
-  getCompletedCount,
-  getReadinessPercent,
-  getTotalLessons,
-} from '../lib/progress';
+import { getCompletedCount, getReadinessPercent, getTotalLessons } from '../lib/progress';
 import { useStudy } from './study-provider';
 
 const workspaceLinks = [
@@ -38,8 +34,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const completed = getCompletedCount(state);
   const total = getTotalLessons();
   const readiness = getReadinessPercent(state);
-  const active = (href: string) =>
-    href === '/' ? pathname === '/' : pathname.startsWith(href);
+  const active = (href: string) => (href === '/' ? pathname === '/' : pathname.startsWith(href));
 
   return (
     <div className="app-shell">
@@ -102,11 +97,7 @@ export function AppShell({ children }: { children: ReactNode }) {
 
       <nav className="mobile-nav">
         {workspaceLinks.slice(0, 5).map((link) => (
-          <Link
-            key={link.href}
-            href={link.href}
-            className={active(link.href) ? 'active' : ''}
-          >
+          <Link key={link.href} href={link.href} className={active(link.href) ? 'active' : ''}>
             {link.label.split(' ')[0]}
           </Link>
         ))}

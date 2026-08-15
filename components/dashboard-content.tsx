@@ -48,9 +48,7 @@ export function DashboardContent() {
 
       <section className="card continue">
         <div className="section-head section-head-tight">
-          <h2 className="h2">
-            {completed === total ? 'Review a lesson' : 'Continue learning'}
-          </h2>
+          <h2 className="h2">{completed === total ? 'Review a lesson' : 'Continue learning'}</h2>
         </div>
         <div className="lesson-card">
           <div className={`lesson-icon ${lessonIconClass(continueLesson.icon)}`}>
@@ -118,16 +116,14 @@ export function DashboardContent() {
           Browse questions
         </Link>
       </div>
-      <div className="question-grid">
+      <div className="question-grid stagger-children">
         {questions.slice(0, 3).map((question, index) => (
           <Link
             href={`/search?q=${encodeURIComponent(question)}`}
-            className="card question-card"
+            className="card question-card interactive-card"
             key={question}
           >
-            <div className="eyebrow eyebrow-tight">
-              0{index + 1} · Interview question
-            </div>
+            <div className="eyebrow eyebrow-tight">0{index + 1} · Interview question</div>
             <div className="question">{question}</div>
             <div className="foot">5 min read · JavaScript</div>
           </Link>

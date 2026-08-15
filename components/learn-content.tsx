@@ -64,7 +64,11 @@ export function LearnContent() {
             <span className="tag">{nextLesson.track}</span>
             <span className="tag">{nextLesson.estimatedMinutes} min</span>
           </div>
-          <Link href={`/learn/${nextLesson.slug}`} className="btn primary" style={{ marginTop: 25 }}>
+          <Link
+            href={`/learn/${nextLesson.slug}`}
+            className="btn primary"
+            style={{ marginTop: 25 }}
+          >
             {state.completed[nextLesson.id] ? 'Review lesson' : 'Start lesson'}
           </Link>
         </section>
@@ -74,7 +78,7 @@ export function LearnContent() {
         <h2 className="h2">All lessons</h2>
         <span className="subtle">{content.length} published</span>
       </div>
-      <div className="results">
+      <div className="results stagger-children">
         {content.map((item) => (
           <Link key={item.id} href={`/learn/${item.slug}`} className="card result">
             <div className={`lesson-icon ${lessonIconClass(item.icon)}`}>{item.icon}</div>

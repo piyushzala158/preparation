@@ -109,7 +109,9 @@ button {
   border-radius: 6px;
   color: var(--muted);
   font-size: 14px;
-  transition: color 0.15s, background 0.15s;
+  transition:
+    color 0.15s,
+    background 0.15s;
 }
 
 .nav-link:hover,
@@ -171,6 +173,17 @@ button {
   max-width: 900px;
   margin: auto;
   padding: 36px 32px 72px;
+  animation: fade-in-up 0.35s ease-out both;
+}
+
+.page-wide {
+  max-width: none;
+  padding-left: 24px;
+  padding-right: 24px;
+}
+
+.workspace-shell {
+  animation: fade-in-up 0.45s ease-out 0.08s both;
 }
 
 .eyebrow {
@@ -241,10 +254,18 @@ button {
   align-items: center;
   gap: 8px;
   font-size: 14px;
+  transition:
+    transform 0.15s ease,
+    background 0.15s ease,
+    border-color 0.15s ease;
 }
 
 .btn:hover {
   border-color: #4a524a;
+}
+
+.btn:active {
+  transform: scale(0.98);
 }
 
 .btn:disabled {
@@ -280,6 +301,19 @@ button {
   background: var(--panel);
   border: 1px solid var(--line);
   border-radius: 8px;
+  transition:
+    transform 0.2s ease,
+    border-color 0.2s ease,
+    background 0.2s ease;
+}
+
+.interactive-card:hover,
+.result:hover,
+.round-card:hover,
+.challenge-card:hover,
+.question-card:hover {
+  transform: translateY(-2px);
+  border-color: #3a423a;
 }
 
 .stat-card {
@@ -407,6 +441,7 @@ button {
   height: 100%;
   background: var(--accent);
   border-radius: 4px;
+  transition: width 0.4s ease;
 }
 
 .track-list {
@@ -715,6 +750,154 @@ button {
   min-height: 520px;
 }
 
+.workspace {
+  display: grid;
+  grid-template-columns: 210px minmax(0, 1.1fr) minmax(0, 1fr);
+  grid-template-rows: minmax(360px, 52vh) minmax(180px, 22vh);
+  grid-template-areas:
+    'tree editor preview'
+    'tree terminal terminal';
+  gap: 10px;
+  min-height: calc(100vh - 240px);
+}
+
+.workspace-tree {
+  grid-area: tree;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.workspace-editor {
+  grid-area: editor;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  min-height: 360px;
+}
+
+.workspace-preview {
+  grid-area: preview;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.workspace-terminal {
+  grid-area: terminal;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.workspace-tree-body {
+  padding: 8px 0 12px;
+  overflow: auto;
+  flex: 1;
+}
+
+.workspace-folder-label,
+.workspace-file {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  text-align: left;
+  font-size: 13px;
+  padding: 6px 12px 6px 0;
+  cursor: pointer;
+  transition:
+    color 0.15s ease,
+    background 0.15s ease;
+}
+
+.workspace-file:hover,
+.workspace-file.active {
+  color: var(--text);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.workspace-file.active {
+  color: var(--accent);
+}
+
+.workspace-file-icon {
+  width: 14px;
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.workspace-editor-body {
+  flex: 1;
+  min-height: 0;
+}
+
+.workspace-editor .monaco-editor,
+.workspace-editor .monaco-editor .overflow-guard {
+  border-radius: 0 0 8px 8px;
+}
+
+.workspace-loading {
+  display: grid;
+  place-items: center;
+  height: 100%;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.workspace-preview-frame {
+  flex: 1;
+  width: 100%;
+  min-height: 0;
+  border: 0;
+  background: #f7f8f5;
+}
+
+.workspace-terminal-body {
+  flex: 1;
+  overflow: auto;
+  padding: 10px 14px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 12px;
+  background: #0b0d0b;
+}
+
+.workspace-terminal-empty {
+  color: var(--muted);
+}
+
+.terminal-line {
+  display: flex;
+  gap: 10px;
+  padding: 3px 0;
+  animation: fade-in 0.2s ease-out both;
+}
+
+.terminal-line.log,
+.terminal-line.info {
+  color: #c8d4c4;
+}
+
+.terminal-line.warn {
+  color: #d4b07a;
+}
+
+.terminal-line.error {
+  color: #e08e8e;
+}
+
+.terminal-time {
+  color: #5f6a60;
+  flex: none;
+}
+
+.terminal-message {
+  word-break: break-word;
+}
+
 .editor-pane,
 .preview-pane {
   background: #0d0f0d;
@@ -812,6 +995,56 @@ button {
   display: none;
 }
 
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.stagger-children > * {
+  animation: fade-in-up 0.35s ease-out both;
+}
+
+.stagger-children > *:nth-child(1) {
+  animation-delay: 0.04s;
+}
+
+.stagger-children > *:nth-child(2) {
+  animation-delay: 0.08s;
+}
+
+.stagger-children > *:nth-child(3) {
+  animation-delay: 0.12s;
+}
+
+.stagger-children > *:nth-child(4) {
+  animation-delay: 0.16s;
+}
+
+.stagger-children > *:nth-child(5) {
+  animation-delay: 0.2s;
+}
+
+.stagger-children > *:nth-child(6) {
+  animation-delay: 0.24s;
+}
+
 @media (max-width: 900px) {
   .sidebar {
     width: 180px;
@@ -879,8 +1112,22 @@ button {
 
   .grid-2,
   .setting-grid,
-  .editor-wrap {
+  .editor-wrap,
+  .workspace {
     grid-template-columns: 1fr;
+    grid-template-areas:
+      'tree'
+      'editor'
+      'preview'
+      'terminal';
+    grid-template-rows: auto;
+    min-height: auto;
+  }
+
+  .workspace-editor,
+  .workspace-preview,
+  .workspace-terminal {
+    min-height: 280px;
   }
 
   .question-grid,

@@ -20,15 +20,15 @@ export default function CommunicationDetail({ params }: { params: { slug: string
         <div className="callout">
           <div className="callout-label">Prompt</div>
           <div className="callout-body">
-            Answer this out loud in two minutes. Record yourself if useful, then listen
-            once for structure, specificity, and whether the listener can follow your choices.
+            Answer this out loud in two minutes. Record yourself if useful, then listen once for
+            structure, specificity, and whether the listener can follow your choices.
           </div>
         </div>
         <h2>Answer framework</h2>
         <p>
-          Start with the context in one sentence. Name the decision or moment that mattered.
-          Explain your reasoning with one concrete detail. Close with the result and what you
-          would carry forward.
+          Start with the context in one sentence. Name the decision or moment that mattered. Explain
+          your reasoning with one concrete detail. Close with the result and what you would carry
+          forward.
         </p>
         <textarea
           className="textarea"
