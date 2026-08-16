@@ -1,15 +1,19 @@
 'use client';
 
 import dynamic from 'next/dynamic';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   buildSandboxHtml,
   ConsoleEntry,
   DEFAULT_ACTIVE_FILE,
   DEFAULT_WORKSPACE_FILES,
+  ensureSrcPath,
   languageForFile,
   normalizeDraft,
+  normalizePath,
+  REACT_SANDBOX_HINTS,
   serializeDraft,
+  templateForFile,
 } from '../lib/sandbox';
 import { useStudy } from './study-provider';
 
@@ -49,25 +53,43 @@ function TreeNode({
   activeFile,
   depth,
   onSelect,
+  onDelete,
 }: {
   name: string;
   node: unknown;
   activeFile: string;
   depth: number;
   onSelect: (path: string) => void;
+  onDelete: (path: string) => void;
 }) {
   if (typeof node === 'string') {
+    if (name === '.gitkeep') return null;
     const isActive = node === activeFile;
+    const icon = node.endsWith('.css')
+      ? '◆'
+      : node.endsWith('.jsx') || node.endsWith('.js')
+        ? '◇'
+        : '·';
+
     return (
-      <button
-        type="button"
-        className={`workspace-file ${isActive ? 'active' : ''}`}
-        style={{ paddingLeft: 12 + depth * 14 }}
-        onClick={() => onSelect(node)}
-      >
-        <span className="workspace-file-icon">{node.endsWith('.css') ? '◆' : '◇'}</span>
-        {name}
-      </button>
+      <div className="workspace-file-row" style={{ paddingLeft: 12 + depth * 14 }}>
+        <button
+          type="button"
+          className={`workspace-file ${isActive ? 'active' : ''}`}
+          onClick={() => onSelect(node)}
+        >
+          <span className="workspace-file-icon">{icon}</span>
+          {name}
+        </button>
+        <button
+          type="button"
+          className="workspace-file-delete"
+          aria-label={`Delete ${name}`}
+          onClick={() => onDelete(node)}
+        >
+          ×
+        </button>
+      </div>
     );
   }
 
@@ -86,6 +108,7 @@ function TreeNode({
           activeFile={activeFile}
           depth={depth + 1}
           onSelect={onSelect}
+          onDelete={onDelete}
         />
       ))}
     </div>
@@ -94,7 +117,6 @@ function TreeNode({
 
 export function Workspace({ id }: WorkspaceProps) {
   const { state, updateState } = useStudy();
-  const iframeRef = useRef<HTMLIFrameElement>(null);
   const [files, setFiles] = useState(DEFAULT_WORKSPACE_FILES);
   const [activeFile, setActiveFile] = useState(DEFAULT_ACTIVE_FILE);
   const [consoleLogs, setConsoleLogs] = useState<ConsoleEntry[]>([]);
@@ -119,28 +141,77 @@ export function Workspace({ id }: WorkspaceProps) {
     [id, updateState],
   );
 
+  const applyFiles = (nextFiles: Record<string, string>, nextActiveFile = activeFile) => {
+    setFiles(nextFiles);
+    setActiveFile(nextActiveFile);
+    persist(nextFiles, nextActiveFile);
+  };
+
   const updateFile = (path: string, value: string) => {
     const nextFiles = { ...files, [path]: value };
-    setFiles(nextFiles);
-    persist(nextFiles, activeFile);
+    applyFiles(nextFiles, activeFile);
   };
 
   const selectFile = (path: string) => {
-    setActiveFile(path);
-    persist(files, path);
+    applyFiles(files, path);
   };
 
   const resetWorkspace = () => {
-    setFiles(DEFAULT_WORKSPACE_FILES);
-    setActiveFile(DEFAULT_ACTIVE_FILE);
     setConsoleLogs([]);
     setPreviewKey((value) => value + 1);
-    persist(DEFAULT_WORKSPACE_FILES, DEFAULT_ACTIVE_FILE);
+    applyFiles({ ...DEFAULT_WORKSPACE_FILES }, DEFAULT_ACTIVE_FILE);
   };
 
   const runPreview = () => {
     setConsoleLogs([]);
     setPreviewKey((value) => value + 1);
+  };
+
+  const createFile = () => {
+    const input = window.prompt('New file path (e.g. src/SearchBar.jsx)', 'src/Component.jsx');
+    if (!input) return;
+
+    const path = ensureSrcPath(input);
+    if (!path) return;
+    if (files[path]) {
+      window.alert('That file already exists.');
+      return;
+    }
+
+    const nextFiles = { ...files, [path]: templateForFile(path) };
+    applyFiles(nextFiles, path);
+  };
+
+  const createFolder = () => {
+    const input = window.prompt('New folder (e.g. src/components)', 'src/components');
+    if (!input) return;
+
+    const folder = normalizePath(input);
+    if (!folder) return;
+
+    const placeholder = `${folder}/.gitkeep`;
+    if (files[placeholder]) {
+      window.alert('That folder already exists.');
+      return;
+    }
+
+    const nextFiles = { ...files, [placeholder]: '' };
+    applyFiles(nextFiles, activeFile);
+  };
+
+  const deleteFile = (path: string) => {
+    if (path === 'src/App.jsx' || path === 'src/main.jsx') {
+      window.alert('App.jsx and main.jsx are required for the React sandbox.');
+      return;
+    }
+
+    if (!window.confirm(`Delete ${path}?`)) return;
+
+    const nextFiles = { ...files };
+    delete nextFiles[path];
+
+    const nextActive = activeFile === path ? DEFAULT_ACTIVE_FILE : activeFile;
+    applyFiles(nextFiles, nextActive);
   };
 
   useEffect(() => {
@@ -162,6 +233,14 @@ export function Workspace({ id }: WorkspaceProps) {
       <aside className="workspace-tree card">
         <div className="pane-head">
           <span>Explorer</span>
+          <div className="workspace-actions">
+            <button type="button" className="btn small" onClick={createFile} title="New file">
+              + File
+            </button>
+            <button type="button" className="btn small" onClick={createFolder} title="New folder">
+              + Folder
+            </button>
+          </div>
         </div>
         <div className="workspace-tree-body">
           {Object.entries(tree).map(([name, node]) => (
@@ -172,8 +251,17 @@ export function Workspace({ id }: WorkspaceProps) {
               activeFile={activeFile}
               depth={0}
               onSelect={selectFile}
+              onDelete={deleteFile}
             />
           ))}
+        </div>
+        <div className="workspace-hints">
+          <div className="workspace-hints-title">React sandbox</div>
+          <ul>
+            {REACT_SANDBOX_HINTS.map((hint) => (
+              <li key={hint}>{hint}</li>
+            ))}
+          </ul>
         </div>
       </aside>
 
@@ -223,7 +311,6 @@ export function Workspace({ id }: WorkspaceProps) {
         </div>
         <iframe
           key={previewKey}
-          ref={iframeRef}
           title="React preview"
           className="workspace-preview-frame"
           sandbox="allow-scripts allow-forms allow-modals"

@@ -791,9 +791,79 @@ button {
 }
 
 .workspace-tree-body {
-  padding: 8px 0 12px;
+  padding: 8px 0;
   overflow: auto;
   flex: 1;
+  min-height: 0;
+}
+
+.workspace-file-row {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding-right: 8px;
+}
+
+.workspace-file-row .workspace-file {
+  flex: 1;
+  min-width: 0;
+}
+
+.workspace-file-delete {
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  width: 22px;
+  height: 22px;
+  border-radius: 4px;
+  cursor: pointer;
+  opacity: 0;
+  transition:
+    opacity 0.15s ease,
+    color 0.15s ease,
+    background 0.15s ease;
+}
+
+.workspace-file-row:hover .workspace-file-delete {
+  opacity: 1;
+}
+
+.workspace-file-delete:hover {
+  color: #e08e8e;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.workspace-hints {
+  border-top: 1px solid var(--line);
+  padding: 12px 14px 14px;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.workspace-hints-title {
+  color: var(--text);
+  font-size: 12px;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.workspace-hints ul {
+  margin: 0;
+  padding-left: 16px;
+  line-height: 1.5;
+}
+
+.workspace-hints li + li {
+  margin-top: 4px;
+}
+
+.workspace-tree .pane-head {
+  gap: 8px;
+}
+
+.workspace-tree .workspace-actions {
+  flex-wrap: wrap;
+  justify-content: flex-end;
 }
 
 .workspace-folder-label,

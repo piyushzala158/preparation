@@ -4,8 +4,17 @@ export type ConsoleEntry = {
   time: string;
 };
 
+export const REACT_SANDBOX_HINTS = [
+  'Edit App.jsx for your UI — no import/export needed.',
+  'main.jsx mounts <App /> using ReactDOM.createRoot.',
+  'Add components as src/YourComponent.jsx and use them in App.',
+  'styles.css is injected automatically.',
+  'Hooks: React.useState, React.useEffect, React.useMemo, etc.',
+  'Click Run after changes to refresh the preview.',
+];
+
 export const DEFAULT_WORKSPACE_FILES: Record<string, string> = {
-  'src/App.jsx': `export default function App() {
+  'src/App.jsx': `function App() {
   const [count, setCount] = React.useState(0);
 
   return (
@@ -18,11 +27,7 @@ export const DEFAULT_WORKSPACE_FILES: Record<string, string> = {
     </main>
   );
 }`,
-  'src/main.jsx': `import React from 'react';
-import { createRoot } from 'react-dom/client';
-import App from './App.jsx';
-
-const root = createRoot(document.getElementById('root'));
+  'src/main.jsx': `const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(<App />);`,
   'src/styles.css': `* {
   box-sizing: border-box;
@@ -68,36 +73,78 @@ button:hover {
 
 export const DEFAULT_ACTIVE_FILE = 'src/App.jsx';
 
+export function componentNameFromPath(path: string) {
+  const base =
+    path
+      .split('/')
+      .pop()
+      ?.replace(/\.(jsx|js|tsx|ts)$/i, '') ?? 'Component';
+  return base
+    .split(/[-_]/)
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join('');
+}
+
+export function templateForFile(path: string) {
+  if (path.endsWith('.css')) {
+    return `/* ${path} */\n`;
+  }
+
+  if (path.endsWith('.js')) {
+    return `// ${path}\n`;
+  }
+
+  const name = componentNameFromPath(path);
+  return `function ${name}() {
+  return (
+    <div>
+      <h2>${name}</h2>
+    </div>
+  );
+}
+`;
+}
+
 export function stripModuleSyntax(code: string) {
   return code
-    .split('\n')
-    .filter((line) => !/^\s*import\s/.test(line))
-    .join('\n')
-    .replace(/export\s+default\s+/g, '')
-    .replace(/export\s+(function|const|class)\s+/g, '$1 ');
+    .replace(/^\s*import\s+[\s\S]*?from\s+['"][^'"]+['"];?\s*$/gm, '')
+    .replace(/^\s*import\s+['"][^'"]+['"];?\s*$/gm, '')
+    .replace(/^\s*export\s+default\s+/gm, '')
+    .replace(/^\s*export\s+(function|const|class)\s+/gm, '$1 ')
+    .replace(/^\s*export\s+\{[\s\S]*?\};?\s*$/gm, '')
+    .trim();
+}
+
+export function bundleReactSource(files: Record<string, string>) {
+  const sourcePaths = Object.keys(files)
+    .filter((path) => /^src\/.*\.(jsx|js)$/i.test(path))
+    .sort((left, right) => {
+      if (left.endsWith('main.jsx')) return 1;
+      if (right.endsWith('main.jsx')) return -1;
+      if (left.endsWith('App.jsx')) return -1;
+      if (right.endsWith('App.jsx')) return 1;
+      return left.localeCompare(right);
+    });
+
+  const chunks = sourcePaths.map((path) => stripModuleSyntax(files[path] ?? '')).filter(Boolean);
+
+  const hasBootstrap = chunks.some((chunk) => /ReactDOM\.createRoot|\.render\s*\(/.test(chunk));
+
+  if (!hasBootstrap) {
+    chunks.push(`const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(<App />);`);
+  }
+
+  return `const { useState, useEffect, useRef, useMemo, useCallback, useReducer } = React;
+
+${chunks.join('\n\n')}`;
 }
 
 export function buildSandboxHtml(files: Record<string, string>) {
   const css = files['src/styles.css'] ?? '';
-  const appCode = stripModuleSyntax(files['src/App.jsx'] ?? '');
-  const mainCode = stripModuleSyntax(files['src/main.jsx'] ?? '');
-
-  const bootstrap = (() => {
-    const processed = stripModuleSyntax(mainCode)
-      .replace(/\bcreateRoot\s*\(/g, 'ReactDOM.createRoot(')
-      .trim();
-    if (processed) return processed;
-    return `const root = ReactDOM.createRoot(document.getElementById('root'));
-root.render(<App />);`;
-  })();
-
-  const combined = `const { useState, useEffect, useRef, useMemo, useCallback, useReducer } = React;
-
-${appCode}
-
-${bootstrap}`;
-
+  const combined = bundleReactSource(files);
   const escapedCss = css.replace(/<\/style/gi, '<\\/style');
+  const serializedSource = JSON.stringify(combined);
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -108,29 +155,52 @@ ${bootstrap}`;
   <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
   <style id="user-styles">${escapedCss}</style>
+</head>
+<body>
+  <div id="root"></div>
   <script>
     (function () {
       const send = (entry) => parent.postMessage({ source: 'prepdesk-sandbox', entry }, '*');
       ['log', 'warn', 'error', 'info'].forEach((method) => {
         const original = console[method].bind(console);
         console[method] = (...args) => {
-          send({ type: method, message: args.map((value) => String(value)).join(' '), time: new Date().toISOString() });
+          send({
+            type: method,
+            message: args.map((value) => String(value)).join(' '),
+            time: new Date().toISOString(),
+          });
           original(...args);
         };
       });
       window.addEventListener('error', (event) => {
-        send({ type: 'error', message: event.message || 'Runtime error', time: new Date().toISOString() });
+        send({
+          type: 'error',
+          message: event.message || 'Runtime error',
+          time: new Date().toISOString(),
+        });
       });
       window.addEventListener('unhandledrejection', (event) => {
-        send({ type: 'error', message: String(event.reason), time: new Date().toISOString() });
+        send({
+          type: 'error',
+          message: String(event.reason),
+          time: new Date().toISOString(),
+        });
       });
+
+      const source = ${serializedSource};
+
+      try {
+        const compiled = Babel.transform(source, { presets: ['react'] }).code;
+        const run = new Function('React', 'ReactDOM', compiled);
+        run(React, ReactDOM);
+      } catch (error) {
+        send({
+          type: 'error',
+          message: error && error.message ? error.message : String(error),
+          time: new Date().toISOString(),
+        });
+      }
     })();
-  </script>
-</head>
-<body>
-  <div id="root"></div>
-  <script type="text/babel" data-presets="react">
-${combined.replace(/<\/script/gi, '<\\/script')}
   </script>
 </body>
 </html>`;
@@ -173,4 +243,17 @@ export function normalizeDraft(
 
 export function serializeDraft(files: Record<string, string>, activeFile: string) {
   return { ...files, __active__: activeFile };
+}
+
+export function normalizePath(input: string) {
+  const trimmed = input.trim().replace(/^\/+/, '');
+  if (!trimmed) return null;
+  if (trimmed.includes('..')) return null;
+  return trimmed;
+}
+
+export function ensureSrcPath(path: string) {
+  const normalized = normalizePath(path);
+  if (!normalized) return null;
+  return normalized.startsWith('src/') ? normalized : `src/${normalized}`;
 }
